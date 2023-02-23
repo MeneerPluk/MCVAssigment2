@@ -32,7 +32,7 @@ def drawCircle(x, y, show=False):
         cv.imshow('img', img)
 
 
-def manualCornerDetection(size): #TODO add a way to reject the image
+def manualCornerDetection(size): 
     """
     This function is used to manually select the chessboard corners by clicking on the outer corners.
     You need to select the outer corners from left to right, top to bottom.
@@ -63,7 +63,19 @@ def manualCornerDetection(size): #TODO add a way to reject the image
 
     # reset mouse callback
     cv.setMouseCallback('img', lambda *args : None)
-    return persCheck
+    return ret, persCheck
+
+
+def loadchessBoardFacts(filename):
+    """
+    this function that reads the intrinsic camera matrix back from a file were it was saved in the calibration part.
+    """
+    r = cv.FileStorage(filename, cv.FILE_STORAGE_READ)    
+    width = r.getNode("CheckerBoardWidth").real()
+    height = r.getNode("CheckerBoardHeight").real()
+    squaresize = r.getNode("CheckerBoardSquareSize").real()
+    r.release()
+    return (int(width),int(height)),int(squaresize)
 
 
 def cameraIntrinsicCalibration(size, imagefnames, outfname, save = True):
@@ -94,13 +106,13 @@ def cameraIntrinsicCalibration(size, imagefnames, outfname, save = True):
         ret, corners = cv.findChessboardCorners(gray, size, None)
     
         if not ret:
-            corners2 = manualCornerDetection(size)
-            ret = True
+            ret, corners2 = manualCornerDetection(size)
         else:
             corners2 = cv.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)
         
-        objpoints.append(objp)
-        imgpoints.append(corners2)
+        if not ret:
+            objpoints.append(objp)
+            imgpoints.append(corners2)
         # Draw and display the corners
         cv.drawChessboardCorners(img, size, corners2, ret)
         cv.imshow('img', img)
@@ -123,9 +135,6 @@ def cameraExtrinsicCalibration(size, imagefnames, mtx, dist):
     global img
     global objp
 
-    # termination criteria
-    criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-
     # prepare object points, a grid of the dimensions that are given by size
     objp = np.zeros((size[0]*size[1],3), np.float32)
     objp[:,:2] = np.mgrid[0:size[0],0:size[1]].T.reshape(-1,2)
@@ -142,20 +151,18 @@ def cameraExtrinsicCalibration(size, imagefnames, mtx, dist):
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
         # Find the chess board corners
-        ret, corners = cv.findChessboardCorners(gray, size, None)
-    
-        if not ret:
-            corners2 = manualCornerDetection(size)
-            ret = True
-        else:
-            corners2 = cv.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)
+        ret, corners = manualCornerDetection(size)
+        if not ret: 
+            objpoints.append(objp)
+            imgpoints.append(corners)
         
-        objpoints.append(objp)
-        imgpoints.append(corners2)
+        # Draw and display the corners
+        cv.drawChessboardCorners(img, size, corners, ret)
+        cv.imshow('img', img)
+        cv.waitKey(250)
 
-    sdf= cv.solvePnP(objpoints, imgpoints, mtx, dist)
-    return sdf
-
+    rvecs, tvecs = cv.solvePnP(objpoints, imgpoints, mtx, dist)
+    return rvecs, tvecs
 
 
 def getAllCameraParameters(size, IntrinsicImgNames, ExtrinsicImgNames, outPath):
@@ -177,7 +184,5 @@ def getAllCameraParameters(size, IntrinsicImgNames, ExtrinsicImgNames, outPath):
 
 
 if __name__ == "__main__":
-    squaresize = 115
+    chessboardshape, squaresize = loadchessBoardFacts("data/checkerboard.xml")
 
-    images = glob.glob('Run1/*.jpg')
-    getAllCameraParameters((8,6), images,"outfile")

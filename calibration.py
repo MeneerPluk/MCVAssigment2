@@ -38,10 +38,21 @@ def manualCornerDetection(size):
     You need to select the outer corners from left to right, top to bottom.
     The grid is then interpolated by first getting the perspective transform of the outer corner points and
     then perspective transforming the 3d grid points using the obtained perspective transformation matrix.
+
+    !before selecting the 4 corners you need to press a key. press 'r' to reject a image and 
+    press any other key to continue selection corners.!
     """
     global img
+    ret = True
     clicks.clear()
     cv.imshow('img', img)
+
+    # needs to know if the image needs to be rejected or not
+    cv.imshow('img',img)
+    k = cv.waitKey(-1)
+    if(k == ord('r')):
+        return False, None
+
     cv.setMouseCallback('img', click_event, img)
     
     # we need 4 corners, so wait...
@@ -63,18 +74,20 @@ def manualCornerDetection(size):
 
     # reset mouse callback
     cv.setMouseCallback('img', lambda *args : None)
+
     return ret, persCheck
 
 
 def loadchessBoardFacts(filename):
     """
-    this function that reads the intrinsic camera matrix back from a file were it was saved in the calibration part.
+    This function reads the chessboard dimensions and size from an XML file where it was saved in.
     """
     r = cv.FileStorage(filename, cv.FILE_STORAGE_READ)    
     width = r.getNode("CheckerBoardWidth").real()
     height = r.getNode("CheckerBoardHeight").real()
     squaresize = r.getNode("CheckerBoardSquareSize").real()
     r.release()
+
     return (int(width),int(height)),int(squaresize)
 
 
@@ -110,7 +123,7 @@ def cameraIntrinsicCalibration(size, imagefnames, outfname, save = True):
         else:
             corners2 = cv.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)
         
-        if not ret:
+        if ret:
             objpoints.append(objp)
             imgpoints.append(corners2)
         # Draw and display the corners
@@ -132,6 +145,8 @@ def cameraIntrinsicCalibration(size, imagefnames, outfname, save = True):
 
 
 def cameraExtrinsicCalibration(size, imagefnames, mtx, dist):
+    """
+    """
     global img
     global objp
 
@@ -165,8 +180,9 @@ def cameraExtrinsicCalibration(size, imagefnames, mtx, dist):
     return rvecs, tvecs
 
 
-def getAllCameraParameters(size, IntrinsicImgNames, ExtrinsicImgNames, outPath):
-    
+def getAndSaveAllCameraParameters(size, IntrinsicImgNames, ExtrinsicImgNames, outPath):
+    """
+    """
     # getting Intrinsic parameters and Distortion:
     mtx, dist = cameraIntrinsicCalibration(size, IntrinsicImgNames, None, False)
 

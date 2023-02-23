@@ -40,7 +40,7 @@ def manualCornerDetection(size):
     then perspective transforming the 3d grid points using the obtained perspective transformation matrix.
 
     !before selecting the 4 corners you need to press a key. press 'r' to reject a image and 
-    press any other key to continue selection corners.!
+    press any other key to continue selection corners!
     """
     global img
     ret = True

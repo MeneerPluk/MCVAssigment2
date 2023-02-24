@@ -6,6 +6,8 @@ import random
 
 screens = 25
 def captureIntrinsics(camnum):
+    """
+    """
     camfolder = 'data/cam' + str(camnum) + '/'
     vidpath = os.path.abspath(camfolder + 'intrinsics.avi')
     exportfolder = os.path.abspath(camfolder + 'intrinsics')
@@ -30,5 +32,32 @@ def captureIntrinsics(camnum):
             cv.waitKey(100)
             cv.imwrite(exportfolder + '/' + str(i) + '.jpg', image)
 
-for i in range(1, 5):
-    captureIntrinsics(i)
+def captureExtrinsics(camnum):
+    """
+    """
+    camfolder = 'data/cam' + str(camnum) + '/'
+    vidpath = os.path.abspath(camfolder + 'checkerboard.avi')
+    exportfolder = os.path.abspath(camfolder + 'extrinsic')
+    if not os.path.exists(exportfolder):
+        os.mkdir(exportfolder)
+    else:
+        ims = glob.glob(exportfolder + '/*')
+        for im in ims:
+            os.remove(im)
+
+    vid = cv.VideoCapture(vidpath)
+    frames = vid.get(cv.CAP_PROP_FRAME_COUNT)
+    randomFrame = random.randint(0, frames)
+    vid.set(cv.CAP_PROP_POS_FRAMES, randomFrame)
+
+    success, image = vid.read()
+    if success:
+        cv.imshow("Camera " + str(camnum), image)
+        cv.waitKey(100)
+        cv.imwrite(exportfolder + '/' + "0" + '.jpg', image)
+    
+
+if __name__ == "__main__":
+    for i in range(1, 5):
+        #captureIntrinsics(i)
+        captureExtrinsics(i)

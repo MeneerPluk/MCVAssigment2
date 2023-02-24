@@ -135,6 +135,7 @@ def cameraIntrinsicCalibration(size, imagefnames, outfname, save = True):
     # calibrate the camera intrinsics
     ret, mtx, dist, _, _ = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 
+
     # writing the camera parameters to a file for later use:
     if save:
         s = cv.FileStorage(outfname+".xml", cv.FileStorage_WRITE)
@@ -156,41 +157,39 @@ def cameraExtrinsicCalibration(size, imagefnames, mtx, dist):
 
     # scale the objp to the size of the chessboard squares in mm:
     objp = objp * squaresize
-
-    # Arrays to store object points and image points from all the images:
-    objpoints = [] # 3d point in real world space
-    imgpoints = [] # 2d points in image plane.
     
-    for fname in imagefnames:
-        img = cv.imread(fname)
-        gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    # read the first image that is in the directory:
+    img = cv.imread(imagefnames[0])
 
-        # Find the chess board corners
-        ret, corners = manualCornerDetection(size)
-        if not ret: 
-            objpoints.append(objp)
-            imgpoints.append(corners)
+    # Find the chess board corners
+    ret, corners = manualCornerDetection(size)
         
-        # Draw and display the corners
-        cv.drawChessboardCorners(img, size, corners, ret)
-        cv.imshow('img', img)
-        cv.waitKey(250)
+    # Draw and display the corners
+    cv.drawChessboardCorners(img, size, corners, ret)
+    cv.imshow('img', img)
+    cv.waitKey(250)
 
-    rvecs, tvecs = cv.solvePnP(objpoints, imgpoints, mtx, dist)
+    # solve the rotation and translation:
+    ret, rvecs, tvecs = cv.solvePnP(objp, corners, mtx, dist)
+
     return rvecs, tvecs
 
 
-def getAndSaveAllCameraParameters(size, IntrinsicImgNames, ExtrinsicImgNames, outPath):
+def getAndSaveParameterConfig(size, camnum):
     """
     """
+    camfolder = 'data/cam' + str(camnum) + '/'
+    intrinsicImgNames = glob.glob(camfolder + 'intrinsics/*.jpg')
+    extrinsicImgNames = glob.glob(camfolder + 'extrinsic/*.jpg')
+
     # getting Intrinsic parameters and Distortion:
-    mtx, dist = cameraIntrinsicCalibration(size, IntrinsicImgNames, None, False)
+    mtx, dist = cameraIntrinsicCalibration(size, intrinsicImgNames, None, False)
 
     # getting The extrinsic parameters:
-    rvecs, tvecs = cameraExtrinsicCalibration(size, ExtrinsicImgNames, mtx, dist)
+    rvecs, tvecs = cameraExtrinsicCalibration(size, extrinsicImgNames, mtx, dist)
 
     # saving parameters to file:
-    s = cv.FileStorage(outPath, cv.FileStorage_WRITE)
+    s = cv.FileStorage(camfolder+'config.xml', cv.FileStorage_WRITE)
     s.write('CameraIntrinsicMatrix', mtx)
     s.write('DistortionCoeffs', dist)
     s.write('CameraRotationVecs', rvecs)
@@ -201,4 +200,6 @@ def getAndSaveAllCameraParameters(size, IntrinsicImgNames, ExtrinsicImgNames, ou
 
 if __name__ == "__main__":
     chessboardshape, squaresize = loadchessBoardFacts("data/checkerboard.xml")
+    for i in range(1,5):
+        getAndSaveParameterConfig(chessboardshape, i)
 

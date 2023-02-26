@@ -31,6 +31,37 @@ def drawCircle(x, y, show=False):
     if show:
         cv.imshow('img', img)
 
+def drawAxis(img, corners, axisImgpts):
+    """
+    This function draws the axis lines and the cube onto a given image.
+    The transformed coordinates of the outer corners of both the axis lines and the cube are used here.
+    """
+    # drawing the axis:
+    corner = tuple(corners[0].ravel().astype(int))
+    img = cv.line(img, corner, tuple(axisImgpts[0].ravel().astype(int)), (255,0,0), 2)
+    img = cv.line(img, corner, tuple(axisImgpts[1].ravel().astype(int)), (0,255,0), 2)
+    img = cv.line(img, corner, tuple(axisImgpts[2].ravel().astype(int)), (0,0,255), 2)
+
+    return img
+
+
+def addAxis2frame(img, mtx, dist, rvecs, tvecs, corners):
+    """
+    This function takes care of the calculation part of adding the cube and axis lines to a frame.
+    The camera rotation and transformation is calculated using the 3D obj points and 2d img points of the Chessboard.
+    Then the 3D points of the axis lines and the cube are transformed using these parameters.
+    It then calls the drawAxisAndCube function with these newly obtained 2d points of the cube and axis points.
+    """
+
+    # 3D points of the axis line-ends:
+    axis = np.float32([[3*squaresize,0,0], [0,3*squaresize,0], [0,0,3*squaresize]]).reshape(-1,3)
+
+    # project 3D points to image plane:
+    axisImgpts, jac = cv.projectPoints(axis, rvecs, tvecs, mtx, dist)
+
+    img = drawAxis(img, corners, axisImgpts)
+
+    return img
 
 def manualCornerDetection(size): 
     """
@@ -172,7 +203,7 @@ def cameraExtrinsicCalibration(size, imagefnames, mtx, dist):
     # solve the rotation and translation:
     ret, rvecs, tvecs = cv.solvePnP(objp, corners, mtx, dist)
 
-    return rvecs, tvecs
+    return corners, rvecs, tvecs
 
 
 def getAndSaveParameterConfig(size, camnum):
@@ -186,7 +217,12 @@ def getAndSaveParameterConfig(size, camnum):
     mtx, dist = cameraIntrinsicCalibration(size, intrinsicImgNames, None, False)
 
     # getting The extrinsic parameters:
-    rvecs, tvecs = cameraExtrinsicCalibration(size, extrinsicImgNames, mtx, dist)
+    corners, rvecs, tvecs = cameraExtrinsicCalibration(size, extrinsicImgNames, mtx, dist)
+
+    img = cv.imread(extrinsicImgNames[0])
+    img2 = addAxis2frame(img, mtx, dist, rvecs, tvecs, corners)
+    cv.imshow('img', img2)
+    cv.waitKey(-1)
 
     # saving parameters to file:
     s = cv.FileStorage(camfolder+'config.xml', cv.FileStorage_WRITE)

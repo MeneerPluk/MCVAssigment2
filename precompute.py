@@ -23,11 +23,18 @@ def captureIntrinsics(camnum):
     grabwindow = int(frames / screens)
 
     for i in range(0, screens):
-        randomFrame = random.randint(i * grabwindow, (i+1) * grabwindow)
-        vid.set(cv.CAP_PROP_POS_FRAMES, randomFrame)
+        term = False
+        count = 0
+        while not term and count < 15:
+            count+=1
+            randomFrame = random.randint(i * grabwindow, (i+1) * grabwindow)
+            vid.set(cv.CAP_PROP_POS_FRAMES, randomFrame)
 
-        success, image = vid.read()
-        if success:
+            success, image = vid.read()
+            if success:
+                ret, _ = cv.findChessboardCorners(image, (8,6), cv.CALIB_CB_FAST_CHECK)
+                term = ret
+        if term:
             cv.imshow("Camera " + str(camnum), image)
             cv.waitKey(100)
             cv.imwrite(exportfolder + '/' + str(i) + '.jpg', image)
@@ -59,5 +66,5 @@ def captureExtrinsics(camnum):
 
 if __name__ == "__main__":
     for i in range(1, 5):
-        #captureIntrinsics(i)
-        captureExtrinsics(i)
+        captureIntrinsics(i)
+        #captureExtrinsics(i)

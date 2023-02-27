@@ -30,6 +30,7 @@ def set_voxel_positions(width, height, depth):
 
 def get_cam_positions():
     out = list()
+    
     for i in range(1, 5):
         path = f'data/cam{i}/config.xml'
         r = cv.FileStorage(path, cv.FileStorage_READ)
@@ -46,7 +47,7 @@ def get_cam_positions():
         tvecs = np.matmul(rt, tvecs)
         tvecs = tvecs.ravel()[:3]
         tvecs[1] = np.abs(tvecs[1]) # our Y-axis is inverted
-        print(f'Final cam position: {tvecs}')
+        print(f'Final Cam{i} position: {tvecs / 50}')
         out.append(tvecs / 50)
 
     return out
@@ -63,18 +64,17 @@ def get_cam_rotation_matrices():
         R, _ = cv.Rodrigues(rvecs, R) # use Rodrigues to get 3x3 rotation matrix
         R = np.append(R, [[0], [0], [0]], axis = 1)
         R = np.append(R, [[0, 0, 0, 1]], axis=0) #transform into 4x4 rotation matrix
-        print(f'Before Y- and Z-axis correction: \n{R}')
-        zCorr = np.mat([[0, 1, 0, 0],
+        zCorr = np.mat([[0, 1, 0, 0], # -90 degrees along Z
                         [-1, 0, 0, 0],
                         [0, 0, 1, 0],
                         [0, 0, 0, 1]])
-        yCorr = np.mat([[0, 0, 1, 0],
+        yCorr = np.mat([[0, 0, 1, 0], # +90 degrees along Y
                         [0, 1, 0, 0],
                         [-1, 0, 0, 0],
                         [0, 0, 0, 1]])
         R = np.matmul(yCorr, R)
         R = np.matmul(zCorr, R)
-        print(f'After Y-axis correction: \n{R}')
+        print(f'Cam{i} rotation matrix after Y-axis correction: \n{R}')
         R = glm.mat4(R)
         cam_rotations[i-1] = R
 

@@ -1,6 +1,7 @@
 import glm
 import random
 import numpy as np
+import cv2 as cv
 
 block_size = 1.0
 
@@ -28,21 +29,53 @@ def set_voxel_positions(width, height, depth):
 
 
 def get_cam_positions():
-    # Generates dummy camera locations at the 4 corners of the room
-    # TODO: You need to input the estimated locations of the 4 cameras in the world coordinates.
-    return [[-64 * block_size, 64 * block_size, 63 * block_size],
-            [63 * block_size, 64 * block_size, 63 * block_size],
-            [63 * block_size, 64 * block_size, -64 * block_size],
-            [-64 * block_size, 64 * block_size, -64 * block_size]]
+    out = list()
+    for i in range(1, 5):
+        path = f'data/cam{i}/config.xml'
+        r = cv.FileStorage(path, cv.FileStorage_READ)
+        tvecs = r.getNode('CameraTranslationVecs').mat()
+        tvecs[1], tvecs[2] = tvecs[2], tvecs[1] # swap y and x axes
+        rvecs = r.getNode('CameraRotationVecs').mat()
+        rvecs[1], rvecs[2] = rvecs[2], rvecs[1] # swap y and x axes
+        R = np.mat((4,4), float)
+        R, _ = cv.Rodrigues(rvecs, R)
+        R = np.append(R, [[0], [0], [0]], axis = 1)
+        R = np.append(R, [[0, 0, 0, 1]], axis=0)
+        tvecs = np.append(tvecs, [[1]]).transpose() # make tvecs a 4x1 matrix
+        rt = -R.transpose()
+        tvecs = np.matmul(rt, tvecs)
+        tvecs = tvecs.ravel()[:3]
+        tvecs[1] = np.abs(tvecs[1]) # our Y-axis is inverted
+        print(f'Final cam position: {tvecs}')
+        out.append(tvecs / 50)
 
+    return out
 
 def get_cam_rotation_matrices():
-    # Generates dummy camera rotation matrices, looking down 45 degrees towards the center of the room
-    # TODO: You need to input the estimated camera rotation matrices (4x4) of the 4 cameras in the world coordinates.
-    cam_angles = [[0, 45, -45], [0, 135, -45], [0, 225, -45], [0, 315, -45]]
     cam_rotations = [glm.mat4(1), glm.mat4(1), glm.mat4(1), glm.mat4(1)]
-    for c in range(len(cam_rotations)):
-        cam_rotations[c] = glm.rotate(cam_rotations[c], cam_angles[c][0] * np.pi / 180, [1, 0, 0])
-        cam_rotations[c] = glm.rotate(cam_rotations[c], cam_angles[c][1] * np.pi / 180, [0, 1, 0])
-        cam_rotations[c] = glm.rotate(cam_rotations[c], cam_angles[c][2] * np.pi / 180, [0, 0, 1])
+
+    for i in range(1, 5):
+        path = f'data/cam{i}/config.xml'
+        r = cv.FileStorage(path, cv.FileStorage_READ)
+        rvecs = r.getNode('CameraRotationVecs').mat()
+        rvecs[1], rvecs[2] = rvecs[2], rvecs[1] # swap y and z axes
+        R = np.mat((4,4), float)
+        R, _ = cv.Rodrigues(rvecs, R) # use Rodrigues to get 3x3 rotation matrix
+        R = np.append(R, [[0], [0], [0]], axis = 1)
+        R = np.append(R, [[0, 0, 0, 1]], axis=0) #transform into 4x4 rotation matrix
+        print(f'Before Y- and Z-axis correction: \n{R}')
+        zCorr = np.mat([[0, 1, 0, 0],
+                        [-1, 0, 0, 0],
+                        [0, 0, 1, 0],
+                        [0, 0, 0, 1]])
+        yCorr = np.mat([[0, 0, 1, 0],
+                        [0, 1, 0, 0],
+                        [-1, 0, 0, 0],
+                        [0, 0, 0, 1]])
+        R = np.matmul(yCorr, R)
+        R = np.matmul(zCorr, R)
+        print(f'After Y-axis correction: \n{R}')
+        R = glm.mat4(R)
+        cam_rotations[i-1] = R
+
     return cam_rotations

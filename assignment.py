@@ -35,18 +35,17 @@ def get_cam_positions():
         path = f'data/cam{i}/config.xml'
         r = cv.FileStorage(path, cv.FileStorage_READ)
         tvecs = r.getNode('CameraTranslationVecs').mat()
-        tvecs[1], tvecs[2] = tvecs[2], tvecs[1] # swap y and x axes
         rvecs = r.getNode('CameraRotationVecs').mat()
-        rvecs[1], rvecs[2] = rvecs[2], rvecs[1] # swap y and x axes
         R = np.mat((4,4), float)
         R, _ = cv.Rodrigues(rvecs, R)
         R = np.append(R, [[0], [0], [0]], axis = 1)
         R = np.append(R, [[0, 0, 0, 1]], axis=0)
+
+        print(R)
         tvecs = np.append(tvecs, [[1]]).transpose() # make tvecs a 4x1 matrix
-        rt = -R.transpose()
-        tvecs = np.matmul(rt, tvecs)
+        tvecs = -R.T @ tvecs
         tvecs = tvecs.ravel()[:3]
-        tvecs[1] = np.abs(tvecs[1]) # our Y-axis is inverted
+        tvecs[1], tvecs[2] = tvecs[2],-tvecs[1]
         print(f'Final Cam{i} position: {tvecs / 50}')
         out.append(tvecs / 50)
 

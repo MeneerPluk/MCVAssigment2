@@ -91,9 +91,11 @@ model4.setShadowThreshold(0.5)
 
 modelList = [model1, model2, model3, model4]
 vidpathList = [vidpath1,vidpath2,vidpath3,vidpath4]
-for mod,vidpath in zip(modelList,vidpathList):
+
+for  mod,vidpath in zip(modelList,vidpathList):
     trainBackgroundModel(mod,vidpath)
-    print("done")
+    print("training model done")
+
 
 
 #cam 1 = 100, 0.5, no dilation
@@ -102,17 +104,6 @@ for mod,vidpath in zip(modelList,vidpathList):
 #cam 4 = 100, 0.5, no dilation
 
 
+#g = substractBackground(img, model2, 2)
 
-path = os.path.abspath('data/cam2/video.avi')
-vid = cv.VideoCapture(path)
-nrOfFrames = vid.get(cv.CAP_PROP_FRAME_COUNT)
-
-i = random.randint(0, nrOfFrames)
-vid.set(cv.CAP_PROP_POS_FRAMES, i)
-succes, img = vid.read()
-
-if succes:
-    g = substractBackground(img, model2, 2)
-    cv.imshow('g', g)
-    cv.waitKey(-1)
 

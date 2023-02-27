@@ -92,6 +92,7 @@ model4.setShadowThreshold(0.5)
 modelList = [model1, model2, model3, model4]
 vidpathList = [vidpath1,vidpath2,vidpath3,vidpath4]
 
+print("please wait while the 4 background models get trained!")
 for  mod,vidpath in zip(modelList,vidpathList):
     trainBackgroundModel(mod,vidpath)
     print("training model done")

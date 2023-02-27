@@ -39,6 +39,29 @@ def captureIntrinsics(camnum):
             cv.waitKey(100)
             cv.imwrite(exportfolder + '/' + str(i) + '.jpg', image)
 
+def GetAverageFrame(camnum):
+    """
+    """
+    camfolder = 'data/cam' + str(camnum) + '/'
+    vidpath = os.path.abspath(camfolder + 'background.avi')
+    vid = cv.VideoCapture(vidpath)
+    avgFrame = None
+    frames = vid.get(cv.CAP_PROP_FRAME_COUNT)
+
+    while vid.isOpened():
+        _, frame = vid.read()
+        if frame is None:
+            break
+        if avgFrame is None:
+            avgFrame = frame.astype(float)
+        else:
+            avgFrame += frame.astype(float)
+
+    avgFrame /= frames
+    avgFrame = avgFrame.astype('uint8')
+    print(f'Saving average of cam {camnum}')
+    cv.imwrite(camfolder + 'background.jpg', avgFrame)
+
 def captureExtrinsics(camnum):
     """
     """
@@ -66,5 +89,5 @@ def captureExtrinsics(camnum):
 
 if __name__ == "__main__":
     for i in range(1, 5):
-        captureIntrinsics(i)
+        GetAverageFrame(i)
         #captureExtrinsics(i)

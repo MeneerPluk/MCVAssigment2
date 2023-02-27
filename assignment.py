@@ -41,11 +41,11 @@ def get_cam_positions():
         R = np.append(R, [[0], [0], [0]], axis = 1)
         R = np.append(R, [[0, 0, 0, 1]], axis=0)
 
-        print(R)
         tvecs = np.append(tvecs, [[1]]).transpose() # make tvecs a 4x1 matrix
         tvecs = -R.T @ tvecs
         tvecs = tvecs.ravel()[:3]
-        tvecs[1], tvecs[2] = tvecs[2],-tvecs[1]
+
+        tvecs[1], tvecs[2] = tvecs[2],-tvecs[1] # changing y and z, also setting z to -y for the mirroring
         print(f'Final Cam{i} position: {tvecs / 50}')
         out.append(tvecs / 50)
 

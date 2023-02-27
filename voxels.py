@@ -24,6 +24,7 @@ for x in range(40):
 
 
 voxels = np.ones((40,40,80))
+#TODO: Make frame the same on all cameras.
 for c in range(1,5):
     path = os.path.abspath(f'data/cam{c}/video.avi')
     vid = cv.VideoCapture(path)

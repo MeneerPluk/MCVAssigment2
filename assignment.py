@@ -18,14 +18,6 @@ def generate_grid(width, depth):
 
 
 def set_voxel_positions(width, height, depth):
-    # Generates random voxel locations
-    # TODO: You need to calculate proper voxel arrays instead of random ones.
-    #data = []
-    #for x in range(width):
-        #for y in range(height):
-            #for z in range(depth):
-                #if random.randint(0, 1000) < 5:
-                    #data.append([x*block_size - width/2, y*block_size, z*block_size - depth/2])
     data = v.initilizeVoxels()
     return data
 
@@ -48,7 +40,7 @@ def get_cam_positions():
         tvecs = tvecs.ravel()[:3]
 
         tvecs[1], tvecs[2] = tvecs[2],-tvecs[1] # changing y and z, also setting z to -y for the mirroring
-        print(f'Final Cam{i} position: {tvecs / 50}')
+        #print(f'Final Cam{i} position: {tvecs / 50}')
         out.append(tvecs / 20)
 
     return out
@@ -75,7 +67,7 @@ def get_cam_rotation_matrices():
                         [0, 0, 0, 1]])
         R = np.matmul(yCorr, R)
         R = np.matmul(zCorr, R)
-        print(f'Cam{i} rotation matrix after Y-axis correction: \n{R}')
+        #print(f'Cam{i} rotation matrix after Y-axis correction: \n{R}')
         R = glm.mat4(R)
         cam_rotations[i-1] = R
 

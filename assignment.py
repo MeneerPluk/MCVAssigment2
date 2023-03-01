@@ -21,6 +21,9 @@ def set_voxel_positions(width, height, depth):
     data = v.initilizeVoxels()
     return data
 
+def set_voxel_positions2():
+    data = v.updateVoxels()
+    return data
 
 def get_cam_positions():
     out = list()

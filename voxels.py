@@ -3,7 +3,9 @@ from collections import defaultdict
 import bgSubstraction as bs
 import cv2 as cv
 import os
-import random
+
+prevImg = [None,None,None,None]
+FrameNr = 0
 
 #impt,c to voxelcoord lookup table:
 imgp_Cam2VoxelTable = defaultdict(list)
@@ -14,6 +16,7 @@ voxelForgroundTable = np.zeros((50,50,100,4))
 
 #------------------------------Construction of the Lookup table:----------------------------------
 print("please wait while the voxel lookuptable is generated!")
+
 # get thet voxelCoords of the complete grid:
 voxelGrid = np.zeros((50,50,100))  
 voxelCoords = np.column_stack(np.where(voxelGrid == 0))
@@ -46,13 +49,12 @@ print("generation done!")
 #--------------------------------------------------------------------------------------------------
 
 
-#TODO: make a function to intitialise voxels from single frame
 def initilizeVoxels():
-
+    global FrameNr
+    global prevImg
     for c in range(1,5):
         path = os.path.abspath(f'data/cam{c}/video.avi')
         vid = cv.VideoCapture(path)
-        nrOfFrames = vid.get(cv.CAP_PROP_FRAME_COUNT)
         vid.set(cv.CAP_PROP_POS_FRAMES, 0)
         succes, img = vid.read()
 
@@ -69,6 +71,8 @@ def initilizeVoxels():
                 model = bs.model4
 
             img = bs.substractBackground(img, model, dilation)
+            prevImg[c-1] = img
+
             for x in range(img.shape[1]):
                 for y in range(img.shape[0]):
                     if img[y,x] == 255:
@@ -81,6 +85,61 @@ def initilizeVoxels():
     indices = np.where((voxelForgroundTable == allOn).all(axis=3))
     indices = np.column_stack((indices[0], indices[2], -1 * indices[1]))
 
+    # update frame nr:
+    FrameNr += 1
+
     return indices
 
 #TODO: make a function to update voxels from 2 subsequent frames
+def updateVoxels():
+    global FrameNr
+    global prevImg
+    global voxelForgroundTable
+
+    for c in range(1,5):
+        path = os.path.abspath(f'data/cam{c}/video.avi')
+        vid = cv.VideoCapture(path)
+        vid.set(cv.CAP_PROP_POS_FRAMES, FrameNr)
+        succes, img = vid.read()
+
+        if succes:
+            dilation = 2 if c == 2 else 0
+            model = None
+            if c == 1:
+                model = bs.model1
+            elif c==2:
+                model = bs.model2
+            elif c==3:
+                model = bs.model3
+            elif c==4:
+                model = bs.model4
+
+            currentImg = bs.substractBackground(img, model, dilation)
+            
+            # getting the pixels that have changed:
+            changes = cv.bitwise_xor(prevImg[c-1],currentImg)
+            prevImg[c-1] = currentImg
+            
+            # getting coords of changed pixels
+            changedCoords = np.column_stack(np.where(changes == 255))
+            # updating the voxelForgroundTable
+            for imgCord in changedCoords:
+                Iy,Ix = imgCord
+                if currentImg[Iy,Ix] == 255:
+                    for voxelCord in imgp_Cam2VoxelTable[Ix,Iy,c]:
+                        Vx,Vy,Vz = voxelCord
+                        voxelForgroundTable[Vx,Vy,Vz,c-1] = 1
+                elif currentImg[Iy,Ix] == 0:
+                    for voxelCord in imgp_Cam2VoxelTable[Ix,Iy,c]:
+                        Vx,Vy,Vz = voxelCord
+                        voxelForgroundTable[Vx,Vy,Vz,c-1] = 0
+
+    # getting all the voxel coords that are on:
+    allOn = np.array([1,1,1,1])
+    indices = np.where((voxelForgroundTable == allOn).all(axis=3))
+    indices = np.column_stack((indices[0], indices[2], -1 * indices[1]))
+    # updating frame nr:
+    FrameNr += 1
+
+    return indices
+

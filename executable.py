@@ -6,7 +6,7 @@ from engine.buffer.texture import *
 from engine.buffer.hdrbuffer import HDRBuffer
 from engine.buffer.blurbuffer import BlurBuffer
 from engine.effect.bloom import Bloom
-from assignment import set_voxel_positions, generate_grid, get_cam_positions, get_cam_rotation_matrices
+from assignment import set_voxel_positions, set_voxel_positions2, generate_grid, get_cam_positions, get_cam_rotation_matrices
 from engine.camera import Camera
 from engine.config import config
 
@@ -124,6 +124,11 @@ def main():
     for c, cam_pos in enumerate(cam_positions):
         cam_shapes[c].set_multiple_positions([cam_pos])
 
+    #--------------------------------------------added code-----------------------------------
+    positions = set_voxel_positions(config['world_width'], config['world_height'], config['world_width'])
+    cube.set_multiple_positions(positions)
+    #-----------------------------------------------------------------------------------------
+    count = 0
     last_time = glfw.get_time()
     while not glfw.window_should_close(window):
         if config['debug_mode']:
@@ -146,6 +151,12 @@ def main():
         hdrbuffer.bind()
         glViewport(0, 0, window_width, window_height)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+        #--------------------------------------------added code-----------------------------------
+        
+        positions = set_voxel_positions2()
+        cube.set_multiple_positions(positions)
+        #-----------------------------------------------------------------------------------------
 
         draw_objs(square, program, perspective, light_pos, texture_grid, normal_grid, specular_grid, depth_grid)
         draw_objs(cube, program, perspective, light_pos, texture, normal, specular, depth)

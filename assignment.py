@@ -26,7 +26,7 @@ def set_voxel_positions(width, height, depth):
             #for z in range(depth):
                 #if random.randint(0, 1000) < 5:
                     #data.append([x*block_size - width/2, y*block_size, z*block_size - depth/2])
-    data = v.voxelList
+    data = v.initilizeVoxels()
     return data
 
 
@@ -49,7 +49,7 @@ def get_cam_positions():
 
         tvecs[1], tvecs[2] = tvecs[2],-tvecs[1] # changing y and z, also setting z to -y for the mirroring
         print(f'Final Cam{i} position: {tvecs / 50}')
-        out.append(tvecs / 25)
+        out.append(tvecs / 20)
 
     return out
 

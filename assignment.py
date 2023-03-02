@@ -43,7 +43,7 @@ def get_cam_positions():
         tvecs = tvecs.ravel()[:3]
 
         tvecs[1], tvecs[2] = tvecs[2],-tvecs[1] # changing y and z, also setting z to -y for the mirroring
-        #print(f'Final Cam{i} position: {tvecs / 50}')
+        #print(f'Final Cam{i} position: {tvecs / 20}')
         out.append(tvecs / 20)
 
     return out

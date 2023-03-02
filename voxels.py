@@ -10,8 +10,8 @@ FrameNr = 0
 #impt,c to voxelcoord lookup table:
 imgp_Cam2VoxelTable = defaultdict(list)
 # contains for each voxel if it is forground for each cam:
-voxelForgroundTable = np.zeros((50,50,100,4))                   
-                                        
+voxelForgroundTable = np.zeros((50,50,100,4))                                                     
+
 
 
 #------------------------------Construction of the Lookup table:----------------------------------
@@ -90,7 +90,7 @@ def initilizeVoxels():
 
     return indices
 
-#TODO: make a function to update voxels from 2 subsequent frames
+
 def updateVoxels():
     global FrameNr
     global prevImg

@@ -128,7 +128,7 @@ def main():
     positions = set_voxel_positions(config['world_width'], config['world_height'], config['world_width'])
     cube.set_multiple_positions(positions)
     #-----------------------------------------------------------------------------------------
-    count = 0
+
     last_time = glfw.get_time()
     while not glfw.window_should_close(window):
         if config['debug_mode']:

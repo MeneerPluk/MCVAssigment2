@@ -1,7 +1,6 @@
 import cv2 as cv
 import os
 import numpy as np
-import random
 
 def trainBackgroundModel(bgSubtractor, bgVidPath):
     """

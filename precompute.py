@@ -7,6 +7,9 @@ import random
 screens = 25
 def captureIntrinsics(camnum):
     """
+    This function captures and saves multiple frames of the intrinsic calibration video. 
+    It tries to only save pictures where the chessboard corners can be found automatically.
+    It aims to get 25 frames from 25 parts of the video but if in one part we cant find corners we skip it.
     """
     camfolder = 'data/cam' + str(camnum) + '/'
     vidpath = os.path.abspath(camfolder + 'intrinsics.avi')
@@ -39,31 +42,10 @@ def captureIntrinsics(camnum):
             cv.waitKey(100)
             cv.imwrite(exportfolder + '/' + str(i) + '.jpg', image)
 
-def GetAverageFrame(camnum):
-    """
-    """
-    camfolder = 'data/cam' + str(camnum) + '/'
-    vidpath = os.path.abspath(camfolder + 'background.avi')
-    vid = cv.VideoCapture(vidpath)
-    avgFrame = None
-    frames = vid.get(cv.CAP_PROP_FRAME_COUNT)
-
-    while vid.isOpened():
-        _, frame = vid.read()
-        if frame is None:
-            break
-        if avgFrame is None:
-            avgFrame = frame.astype(float)
-        else:
-            avgFrame += frame.astype(float)
-
-    avgFrame /= frames
-    avgFrame = avgFrame.astype('uint8')
-    print(f'Saving average of cam {camnum}')
-    cv.imwrite(camfolder + 'background.jpg', avgFrame)
 
 def captureExtrinsics(camnum):
     """
+    This function captures and saves one random frame of the extrinsic video.
     """
     camfolder = 'data/cam' + str(camnum) + '/'
     vidpath = os.path.abspath(camfolder + 'checkerboard.avi')
@@ -89,5 +71,4 @@ def captureExtrinsics(camnum):
 
 if __name__ == "__main__":
     for i in range(1, 5):
-        GetAverageFrame(i)
-        #captureExtrinsics(i)
+        captureExtrinsics(i)

@@ -34,7 +34,7 @@ def drawCircle(x, y, show=False):
 def drawAxis(img, corners, axisImgpts):
     """
     This function draws the axis lines and the cube onto a given image.
-    The transformed coordinates of the outer corners of both the axis lines and the cube are used here.
+    The transformed coordinates of the outer corners of the axis lines are used here.
     """
     # drawing the axis:
     corner = tuple(corners[0].ravel().astype(int))
@@ -124,6 +124,8 @@ def loadchessBoardFacts(filename):
 
 def cameraIntrinsicCalibration(size, imagefnames, outfname, save = True):
     """
+    This function calibrates the camera intrinsics and if save is true it will write the mtx to a xml file
+    with the path (outfname) else it just returns the mtx and distortion.
     """
     global img
     global objp
@@ -178,6 +180,9 @@ def cameraIntrinsicCalibration(size, imagefnames, outfname, save = True):
 
 def cameraExtrinsicCalibration(size, imagefnames, mtx, dist):
     """
+    This function calculates the camera extrinsics using the mtx and distortion 
+    that are already obtained the extrinsics get calibrated.
+    the camera extrinsics will be returned.
     """
     global img
     global objp
@@ -208,6 +213,8 @@ def cameraExtrinsicCalibration(size, imagefnames, mtx, dist):
 
 def getAndSaveParameterConfig(size, camnum):
     """
+    This function calibrates both the intrinsics and extrinsics or a camera for which the cam number is provided.
+    These then get saved in the camera folder in a XML file for later use.
     """
     camfolder = 'data/cam' + str(camnum) + '/'
     intrinsicImgNames = glob.glob(camfolder + 'intrinsics/*.jpg')

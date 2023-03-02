@@ -3,9 +3,14 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import voxels as v
 from skimage import measure
-from skimage.draw import ellipsoid
 
 def showVoxelsAsMesh(voxelGrid):
+    """
+    This function plots the mesh of the voxels, using the marching cubes algorithm.
+    The input should be an 3d array of the voxel space with 1's for voxels that are on and 0's 
+    for voxels that are turned off.
+    """
+
     # Use marching cubes to obtain the surface mesh of these ellipsoids
     verts, faces, normals, values = measure.marching_cubes(voxelGrid, 0)
 
@@ -40,3 +45,4 @@ if __name__ == "__main__":
     for cord in coords:
         x,y,z = cord[0],-cord[2],cord[1]
         voxelGrid[x,y,z] = 1
+    showVoxelsAsMesh(voxelGrid)

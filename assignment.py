@@ -21,7 +21,7 @@ def set_voxel_positions(width, height, depth):
     data = v.initilizeVoxels()
     return data
 
-def set_voxel_positions2():
+def set_voxel_positions_update():
     data = v.updateVoxels()
     return data
 

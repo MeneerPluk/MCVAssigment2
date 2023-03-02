@@ -3,7 +3,12 @@ import os
 import numpy as np
 import random
 
-def trainBackgroundModel(bgSubstractor, bgVidPath):
+def trainBackgroundModel(bgSubtractor, bgVidPath):
+    """
+    This function trains a BackgroundSubtractorMOG2 model on all frames of a background video.
+    It does some preprocessing by applying a gaussian blur on the image to reduce noise.
+    """
+    
     vid = cv.VideoCapture(bgVidPath)
     nrOfFrames = vid.get(cv.CAP_PROP_FRAME_COUNT)
 
@@ -14,10 +19,20 @@ def trainBackgroundModel(bgSubstractor, bgVidPath):
             #preprossesing with a gaussian blur:
             img = cv.GaussianBlur(img,(3,3), 0)
             #training the background model:
-            bgSubstractor.apply(img, None, -1)
+            bgSubtractor.apply(img, None, -1)
 
 
-def testBackgroundModel(bgSubstractor, fgVidPath, dilation):
+def testBackgroundModel(bgSubtractor, fgVidPath, dilation):
+    """
+    This function is to test a trained background model on the frames of the forground video.
+    For trying different values of thresholds and dilation this was very handy.
+
+    Same as training the backgroundmodel we apply a gaussian blur before subtracting the background.
+    after the subtraction we find the contour of the man with findcontours.
+    and we draw this contour only on a all black image of the same size as the origional image.
+    If needed there are "dilation" iterations of dilation performed on the final image.
+    """
+
     vid = cv.VideoCapture(fgVidPath)
     nrOfFrames = vid.get(cv.CAP_PROP_FRAME_COUNT)
 
@@ -27,8 +42,8 @@ def testBackgroundModel(bgSubstractor, fgVidPath, dilation):
         if succes:
             #preprossessing with a gaussian blur:
             blur = cv.GaussianBlur(img,(3,3), 0)
-            #substracting the background:
-            fgImg = bgSubstractor.apply(blur, None, 0)
+            #subtracting the background:
+            fgImg = bgSubtractor.apply(blur, None, 0)
             
             #finding the contour:
             contours, hierarchy  = cv.findContours(fgImg, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE)
@@ -36,7 +51,6 @@ def testBackgroundModel(bgSubstractor, fgVidPath, dilation):
             indexes = np.argsort(list,0)
 
             testimg = np.zeros_like(fgImg)
-
             fgImg = cv.drawContours(testimg, contours, indexes[-1] , (255,255,255), -1)
 
             kernel = np.ones((3,3),np.uint8) 
@@ -47,11 +61,16 @@ def testBackgroundModel(bgSubstractor, fgVidPath, dilation):
             cv.imshow('bgImg', fgImg)
             cv.waitKey(10)
 
-def substractBackground(img, bgSubstractor, dilation):
+def subtractBackground(img, bgSubtractor, dilation):
+    """
+    This function performs the background subtranction on a given image with the given trained background model.
+    It returns the forground mask.
+    """
+
     #preprossessing with a gaussian blur:
     blur = cv.GaussianBlur(img,(3,3), 0)
-    #substracting the background:
-    fgImg = bgSubstractor.apply(blur, None, 0)
+    #subtracting the background:
+    fgImg = bgSubtractor.apply(blur, None, 0)
             
     #finding the contour:
     contours, hierarchy  = cv.findContours(fgImg, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE)
@@ -59,7 +78,6 @@ def substractBackground(img, bgSubstractor, dilation):
     indexes = np.argsort(list,0)
 
     testimg = np.zeros_like(fgImg)
-
     fgImg = cv.drawContours(testimg, contours, indexes[-1] , (255,255,255), -1)
 
     kernel = np.ones((3,3),np.uint8) 
@@ -89,6 +107,8 @@ model4 = cv.createBackgroundSubtractorMOG2(150, 100, True)
 model4.setShadowValue(0)
 model4.setShadowThreshold(0.5)
 
+
+#------------------------------------Training the background models--------------------------------------
 modelList = [model1, model2, model3, model4]
 vidpathList = [vidpath1,vidpath2,vidpath3,vidpath4]
 
@@ -98,13 +118,13 @@ for  mod,vidpath in zip(modelList,vidpathList):
     print("training model done")
 
 
+#threshold parameters and dilation parameter for all camera's:
+    #cam 1 = 100, 0.5, no dilation
+    #cam 2 = 100, 0.42, with 2 iterations of dilation
+    #cam 3 = 100, 0.5, no dilation
+    #cam 4 = 100, 0.5, no dilation
 
-#cam 1 = 100, 0.5, no dilation
-#cam 2 = 100, 0.42, with 2 iterations of dilation
-#cam 3 = 100, 0.5, no dilation
-#cam 4 = 100, 0.5, no dilation
 
-
-#g = substractBackground(img, model2, 2)
+#g = subtractBackground(img, model2, 2)
 
 

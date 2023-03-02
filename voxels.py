@@ -13,45 +13,61 @@ imgp_Cam2VoxelTable = defaultdict(list)
 voxelForgroundTable = np.zeros((50,50,100,4))                                                     
 
 
+def buildVoxelLookupTable():
+    """
+    This function builds the voxel table, a dictionary that maps (imgX,imgY,Cameranr) --> list of (voxX,voxY,voxZ)
+    Made such that we dont have to loop over all voxels again when there is a frame update.
+    """
 
-#------------------------------Construction of the Lookup table:----------------------------------
-print("please wait while the voxel lookuptable is generated!")
+    global imgp_Cam2VoxelTable
 
-# get thet voxelCoords of the complete grid:
-voxelGrid = np.zeros((50,50,100))  
-voxelCoords = np.column_stack(np.where(voxelGrid == 0))
-# times 20 because voxels have size 20mm*20mm*20mm, plus 10 to get the voxel center:
-voxelCenterWorldCoords =20 * voxelCoords + np.array((10,10,10))
+    print("please wait while the voxel lookuptable is generated!")
 
-# reset the voxelForgroundTable and voxelgrid:
-voxelForgroundTable = np.zeros((50,50,100,4))                   
-voxelGrid = np.zeros((50,50,100))        
+    # get thet voxelCoords of the complete grid:
+    voxelGrid = np.zeros((50,50,100))  
+    voxelCoords = np.column_stack(np.where(voxelGrid == 0))
+    # times 20 because voxels have size 20mm*20mm*20mm, plus 10 to get the voxel center:
+    voxelCenterWorldCoords =20 * voxelCoords + np.array((10,10,10))
 
-for c in range(1,5):
-    # get the camera parameters from the specific camera:
-    path = f'data/cam{c}/config.xml'
-    r = cv.FileStorage(path, cv.FileStorage_READ)
-    tvecs = r.getNode('CameraTranslationVecs').mat()
-    rvecs = r.getNode('CameraRotationVecs').mat()
-    mtx = r.getNode('CameraIntrinsicMatrix').mat()
-    dist = r.getNode('DistortionCoeffs').mat()
+    # reset the voxelgrid:              
+    voxelGrid = np.zeros((50,50,100))        
 
-    # project the voxel
-    Imgpts, jac = cv.projectPoints(np.float32(voxelCenterWorldCoords), rvecs, tvecs, mtx, dist)
-    # reshape Imgpts to shape (x,2) and rounding pixel coords to nearest integer:
-    Imgpts = np.int32(np.rint(Imgpts.reshape((-1,2))))
-    # add to table:
-    for imgCord,voxCord in zip(Imgpts,voxelCoords):
-        x,y =imgCord
-        imgp_Cam2VoxelTable[(x,y,c)].append(voxCord)
+    for c in range(1,5):
+        # get the camera parameters from the specific camera:
+        path = f'data/cam{c}/config.xml'
+        r = cv.FileStorage(path, cv.FileStorage_READ)
+        tvecs = r.getNode('CameraTranslationVecs').mat()
+        rvecs = r.getNode('CameraRotationVecs').mat()
+        mtx = r.getNode('CameraIntrinsicMatrix').mat()
+        dist = r.getNode('DistortionCoeffs').mat()
 
-print("generation done!")
-#--------------------------------------------------------------------------------------------------
+        # project the voxel
+        Imgpts, jac = cv.projectPoints(np.float32(voxelCenterWorldCoords), rvecs, tvecs, mtx, dist)
+        # reshape Imgpts to shape (x,2) and rounding pixel coords to nearest integer:
+        Imgpts = np.int32(np.rint(Imgpts.reshape((-1,2))))
+        # add to table:
+        for imgCord,voxCord in zip(Imgpts,voxelCoords):
+            x,y =imgCord
+            imgp_Cam2VoxelTable[(x,y,c)].append(voxCord)
+
+    print("generation done!")
 
 
 def initilizeVoxels():
+    """
+    This function will setup the voxel grid according to the first frame only.
+    for each camera the background of the frame gets subtracted and then if a pixel is forground each voxel,
+    that corresponds to that pixel will be set to be forground for that camera.
+
+    All coordinates of voxels that are on in all cameras will get added to a list that will be returned.
+    """
     global FrameNr
     global prevImg
+    global voxelForgroundTable
+    #reset framenr and voxel forground table:
+    voxelForgroundTable = np.zeros((50,50,100,4))   
+    FrameNr = 0
+
     for c in range(1,5):
         path = os.path.abspath(f'data/cam{c}/video.avi')
         vid = cv.VideoCapture(path)
@@ -70,7 +86,7 @@ def initilizeVoxels():
             elif c==4:
                 model = bs.model4
 
-            img = bs.substractBackground(img, model, dilation)
+            img = bs.subtractBackground(img, model, dilation)
             prevImg[c-1] = img
 
             for x in range(img.shape[1]):
@@ -92,6 +108,15 @@ def initilizeVoxels():
 
 
 def updateVoxels():
+    """
+    This function updates the voxels according to the previous frame and the next frame.
+    It does so by getting the XOR of the two frames forground masks and then only updating 
+    the voxels where visibility has been changed.
+    This should save time because we do not loop over every voxel.
+
+    All coordinates of voxels that are on in all cameras will get added to a list that will be returned.
+    """
+
     global FrameNr
     global prevImg
     global voxelForgroundTable
@@ -114,7 +139,7 @@ def updateVoxels():
             elif c==4:
                 model = bs.model4
 
-            currentImg = bs.substractBackground(img, model, dilation)
+            currentImg = bs.subtractBackground(img, model, dilation)
             
             # getting the pixels that have changed:
             changes = cv.bitwise_xor(prevImg[c-1],currentImg)
@@ -143,3 +168,8 @@ def updateVoxels():
 
     return indices
 
+
+
+#------------------------------Construction of the Lookup table when script is ran or imported:----------------------------------
+buildVoxelLookupTable()
+#--------------------------------------------------------------------------------------------------------------------------------

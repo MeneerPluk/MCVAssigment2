@@ -24,13 +24,13 @@ def showVoxelsAsMesh(voxelGrid):
     mesh.set_edgecolor('k')
     ax.add_collection3d(mesh)
 
-    ax.set_xlabel("x-axis: 2cm per unit")
-    ax.set_ylabel("y-axis: 2cm per unit")
-    ax.set_zlabel("z-axis: 2cm per unit")
+    ax.set_xlabel("x-axis: 1cm per unit")
+    ax.set_ylabel("y-axis: 1cm per unit")
+    ax.set_zlabel("z-axis: 1cm per unit")
 
-    ax.set_xlim(0, 65)
-    ax.set_ylim(0, 65)
-    ax.set_zlim(0, 65)
+    ax.set_xlim(0, 130)
+    ax.set_ylim(0, 130)
+    ax.set_zlim(0, 130)
 
     plt.tight_layout()
     plt.show()
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     coords = v.initilizeVoxels()
 
     # turing it into a 3d array one hot encoding:
-    voxelGrid = np.zeros((50,50,100))  
+    voxelGrid = np.zeros((100,100,200))  
     for cord in coords:
         x,y,z = cord[0],-cord[2],cord[1]
         voxelGrid[x,y,z] = 1

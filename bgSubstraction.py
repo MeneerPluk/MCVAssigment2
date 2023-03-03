@@ -123,7 +123,7 @@ for  mod,vidpath in zip(modelList,vidpathList):
     #cam 3 = 100, 0.5, no dilation
     #cam 4 = 100, 0.5, no dilation
 
-
+#testBackgroundModel(model4, os.path.abspath('data/cam4/video.avi'), 0)
 #g = subtractBackground(img, model2, 2)
 
 

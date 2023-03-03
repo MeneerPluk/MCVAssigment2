@@ -10,7 +10,7 @@ FrameNr = 0
 #impt,c to voxelcoord lookup table:
 imgp_Cam2VoxelTable = defaultdict(list)
 # contains for each voxel if it is forground for each cam:
-voxelForgroundTable = np.zeros((50,50,100,4))                                                     
+voxelForgroundTable = np.zeros((100,100,200,4))                                                     
 
 
 def buildVoxelLookupTable():
@@ -24,13 +24,13 @@ def buildVoxelLookupTable():
     print("please wait while the voxel lookuptable is generated!")
 
     # get thet voxelCoords of the complete grid:
-    voxelGrid = np.zeros((50,50,100))  
+    voxelGrid = np.zeros((100,100,200))  
     voxelCoords = np.column_stack(np.where(voxelGrid == 0))
     # times 20 because voxels have size 20mm*20mm*20mm, plus 10 to get the voxel center:
-    voxelCenterWorldCoords =20 * voxelCoords + np.array((10,10,10))
+    voxelCenterWorldCoords =10 * voxelCoords + np.array((5,5,5))
 
     # reset the voxelgrid:              
-    voxelGrid = np.zeros((50,50,100))        
+    voxelGrid = np.zeros((100,100,200))        
 
     for c in range(1,5):
         # get the camera parameters from the specific camera:
@@ -65,7 +65,7 @@ def initilizeVoxels():
     global prevImg
     global voxelForgroundTable
     #reset framenr and voxel forground table:
-    voxelForgroundTable = np.zeros((50,50,100,4))   
+    voxelForgroundTable = np.zeros((100,100,200,4))   
     FrameNr = 0
 
     for c in range(1,5):
